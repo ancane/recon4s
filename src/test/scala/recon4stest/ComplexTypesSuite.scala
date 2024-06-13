@@ -11,7 +11,7 @@ class ComplexTypesSuite extends munit.FunSuite:
     test("recon4s should read complex config") {
         val actual = config.as[AppConfig]("app")
         assertEquals(actual.version, "v1.0")
-        assertEquals(actual.persistance.strategies.size, 18)
+        assertEquals(actual.persistence.strategies.size, 18)
     }
 end ComplexTypesSuite
 
@@ -29,14 +29,15 @@ case class WebConfig(
     metadata: Seq[String]
 )
 
-case class PersistanceConfig(
+case class PersistenceConfig(
     possibleSessionExpireDelay: FiniteDuration,
     keepNSnapshots: Int,
     stashBufferSize: Int,
     stashMaxDuration: FiniteDuration,
     metadata: Map[String, String],
     responseTimeout: FiniteDuration,
-    strategies: Map[String, StrategyConfig]
+    strategies: Map[String, StrategyConfig],
+    `snapShotInterval.ms`: FiniteDuration
 ) derives Configurable
 
 enum Strategy derives Configurable:
@@ -83,6 +84,6 @@ case class AppConfig(
     version: String,
     web: WebConfig,
     cassandra: CassandraConfig,
-    persistance: PersistanceConfig,
+    persistence: PersistenceConfig,
     destinations: DestinationConfig
 ) derives Configurable

@@ -18,7 +18,6 @@ Secondly, if the whole config or part of it is fetched from a file or network, i
 - `Reloadable[T]` trait marks hot-reloadable members
 - Adds no result wrappers. Throws exceptions (com.typesafe.config.ConfigException)
 - Assumes case class fields follow camelCase naming and looks for kebab-case, camelCase, CamelCaps and snake_case config keys by default. Convention is configurable via given override
-- No quoted keys support yet (like "key.has.got.dots")
 
 ## Import
 `import recon4s.{*, given}`

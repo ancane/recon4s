@@ -231,6 +231,17 @@ class ScalaTypesSuite extends munit.FunSuite:
         assertEquals(actual, Conf("1"))
     }
 
+    test("recon4s should allow substituting class field for config keys with dots") {
+        given Convention = recon4s.CamelToCebab.substitute("one", "TWO.two")
+
+        case class Conf(one: String)
+        val actual = ConfigFactory
+            .parseString("""{ "TWO.two" = 1}""")
+            .as[Conf]
+
+        assertEquals(actual, Conf("1"))
+    }
+
     test("recon4s should read config as map") {
         case class DB(connectionPoints: Set[String], connectionTimeout: FiniteDuration, tls: Option[Boolean])
 
@@ -461,6 +472,26 @@ class ScalaTypesSuite extends munit.FunSuite:
         assertEquals(appConfig.appName, "recon4s")
         assertEquals(appConfig.appVersion, "1.2.3")
         assert(appConfig.snakeBites)
+    }
+
+    test("recon4s should read quoted keys") {
+        import com.typesafe.config.*
+        import recon4s.{*, given}
+
+        case class AppConf(
+            `app name`: String,
+            `app.version`: String,
+        ) derives Configurable
+
+        val config = ConfigFactory.parseString(
+          """|
+             |    "app name" = recon4s
+             |    "app.version" = "1.2.3"
+             |""".stripMargin
+        )
+
+        val appConfig = config.as[AppConf]
+        assertEquals(appConfig, AppConf("recon4s", "1.2.3"))
     }
 
 end ScalaTypesSuite

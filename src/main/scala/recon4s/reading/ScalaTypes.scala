@@ -1,6 +1,6 @@
 package recon4s.reading
 
-import com.typesafe.config.{ConfigException, ConfigUtil}
+import com.typesafe.config.ConfigException
 import recon4s.naming.Convention
 import scala.util.matching.Regex
 import scala.concurrent.duration.{Duration, FiniteDuration, NANOSECONDS}
@@ -101,7 +101,7 @@ private[recon4s] trait ScalaTypes:
                     .root().entrySet().asScala
                     .map { entry =>
                         val key   = entry.getKey
-                        val value = c.get(cfg, ConfigUtil.quoteString(key))
+                        val value = c.get(cfg, key)
                         key -> value
                     }.toMap
 end ScalaTypes

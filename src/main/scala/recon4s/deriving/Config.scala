@@ -15,26 +15,31 @@ sealed trait Config:
     def completePath(key: String): String =
         val pathElems = keys.filterNot(_ == Configurable.rootKey) :+ key
         ConfigUtil.joinPath(pathElems*)
-    def hasKey(key: String): Boolean             = catchErrors(key, underlying.root().keySet().contains)
-    def origin()                                 = underlying.origin()
-    def getValue(key: String): ConfigValue       = catchErrors(key, underlying.getValue)
-    def getString(key: String): String           = catchErrors(key, underlying.getString)
-    def getList(key: String): List[ConfigValue]  = catchErrors(key, underlying.getList).asScala.toList
-    def getConfig(key: String): Config           = Conf(catchErrors(key, underlying.getConfig), keys :+ key)
-    def getInt(key: String): Int                 = catchErrors(key, underlying.getInt)
-    def getLong(key: String): Long               = catchErrors(key, underlying.getLong)
-    def getBoolean(key: String): Boolean         = catchErrors(key, underlying.getBoolean)
-    def getDouble(key: String): Double           = catchErrors(key, underlying.getDouble)
-    def getDuration(key: String): Duration       = catchErrors(key, underlying.getDuration)
-    def getDuration(key: String, unit: TimeUnit) = catchErrors(key, { k => underlying.getDuration(k, unit) })
-    def getPeriod(key: String): Period           = catchErrors(key, underlying.getPeriod)
+    def hasKey(key: String): Boolean       = underlying.root().keySet().contains(key)
+    def origin()                           = underlying.origin()
+    def getValue(key: String): ConfigValue = catchErrors(key, _.getValue(key))
+    def getNonEmpty(key: String): ConfigValue =
+        val v = underlying.root().get(key)
+        if v == null then throw new ConfigException.Missing(origin(), completePath(key)) with NoStackTrace
+        else v
+    def getString(key: String): String           = catchErrors(key, _.getString(key))
+    def getList(key: String): List[ConfigValue]  = catchErrors(key, _.getList(key)).asScala.toList
+    def getConfig(key: String): Config           = Conf(catchErrors(key, _.getConfig(key)), keys :+ key)
+    def getInt(key: String): Int                 = catchErrors(key, _.getInt(key))
+    def getLong(key: String): Long               = catchErrors(key, _.getLong(key))
+    def getBoolean(key: String): Boolean         = catchErrors(key, _.getBoolean(key))
+    def getDouble(key: String): Double           = catchErrors(key, _.getDouble(key))
+    def getDuration(key: String): Duration       = catchErrors(key, _.getDuration(key))
+    def getDuration(key: String, unit: TimeUnit) = catchErrors(key, _.getDuration(key, unit))
+    def getPeriod(key: String): Period           = catchErrors(key, _.getPeriod(key))
     def atPath(value: ConfigValue, key: String): Config = Conf(
       underlying = value.atPath(key),
       keys = keys :+ key
     )
 
-    private def catchErrors[T](key: String, f: String => T): T =
-        Try(f(key)).recover {
+    private def catchErrors[T](key: String, f: TypesafeConfig => T): T =
+        val cfg = getNonEmpty(key).atPath(key)
+        Try(f(cfg)).recover {
 
             case _: ConfigException.Missing =>
                 throw new ConfigException.Missing(origin(), completePath(key)) with NoStackTrace
