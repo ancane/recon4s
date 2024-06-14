@@ -19,6 +19,12 @@ Secondly, if the whole config or part of it is fetched from a file or network, i
 - Adds no result wrappers. Throws exceptions (com.typesafe.config.ConfigException)
 - Assumes case class fields follow camelCase naming and looks for kebab-case, camelCase, CamelCaps and snake_case config keys by default. Convention is configurable via given override
 
+## Sbt
+
+`
+libraryDependencies += "io.github.ancane" %% "recon4s" % "0.4"
+`
+
 ## Import
 `import recon4s.{*, given}`
 

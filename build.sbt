@@ -1,5 +1,6 @@
-ThisBuild / organization := "recon4s"
-ThisBuild / version      := "0.3.0"
+ThisBuild / organization         := "io.github.ancane"
+ThisBuild / organizationHomepage := Some(url("https://github.com/ancane/recon4s"))
+ThisBuild / version              := "0.4"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
