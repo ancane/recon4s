@@ -1,4 +1,4 @@
-# recon4s
+# recon4s [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.ancane/recon4s_3/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.ancane/recon4s_3)
 > Reloadable configs for Scala 3
 
 ## Motivation
