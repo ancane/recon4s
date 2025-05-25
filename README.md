@@ -22,7 +22,7 @@ Secondly, if the whole config or part of it is fetched from a file or network, i
 ## Sbt
 
 `
-libraryDependencies += "io.github.ancane" %% "recon4s" % "0.4"
+libraryDependencies += "io.github.ancane" %% "recon4s" % "0.4.3"
 `
 
 ## Import
