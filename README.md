@@ -2,7 +2,7 @@
 > Reloadable configs for Scala 3
 
 ## Motivation
-Imagine a legacy config that follows no strict naming rules, having a mixture of kebab, camel and snake case keys.
+Imagine a legacy config that follows no strict naming rules, having a mixture of dash, camel and snake-case keys.
 
 Being able to put mixed-case config into a case class was the primary goal.
 
@@ -17,12 +17,12 @@ Secondly, if the whole config or part of it is fetched from a file or network, i
 - Supports enums, trait families, default values
 - `Reloadable[T]` trait marks hot-reloadable members
 - Adds no result wrappers. Throws exceptions (com.typesafe.config.ConfigException)
-- Assumes case class fields follow camelCase naming and looks for kebab-case, camelCase, CamelCaps and snake_case config keys by default. Convention is configurable via given override
+- Assumes case class fields follow camelCase naming and looks for dash-case, camelCase, CamelCaps and snake_case config keys by default. Convention is configurable via given override
 
 ## Sbt
 
 `
-libraryDependencies += "io.github.ancane" %% "recon4s" % "0.4.3"
+libraryDependencies += "io.github.ancane" %% "recon4s" % <version>
 `
 
 ## Import
@@ -87,22 +87,22 @@ def flag = appConfig.featureFlag.get()
 
 Conventions are:
 
-- CamelToCebab
-- CamelToCebabCamel
-- CamelToCebabCamelCaps
-- CamelToCebabCamelCapsSnake (default)
+- CamelFromDash
+- CamelFromDashCamel
+- CamelFromDashCamelCaps
+- CamelFromDashCamelCapsSnake (default)
 
-`CamelToCebabCamelCapsSnake` means, that given `fieldName`, recon4s will look for config key named `field-name` or `fieldName` or `FieldName` or `field_name` or `as-is` in that order.
+`CamelFromDashCamelCapsSnake` means, that given `fieldName`, recon4s will look for config key named `field-name` or `fieldName` or `FieldName` or `field_name` or `as-is` in that order.
 
 Switching to stricter convention:
 
 ```scala
-given Convention = recon4s.CamelToCebab
+given Convention = recon4s.CamelFromDash
 ```
 
 Config keys direct override:
 ```scala
-given Convention = recon4s.CamelToCebab.substitute("one", "TWO")
+given Convention = recon4s.CamelFromDash.substitute("one", "TWO")
 
 case class One(one: String)
 
@@ -131,5 +131,5 @@ val actual = ConfigFactory
 Changing default type key:
 
 ```scala
-given Convention = recon4s.CamelToCebab.withDescriminator("name")
+given Convention = recon4s.CamelFromDash.withDescriminator("name")
 ```
