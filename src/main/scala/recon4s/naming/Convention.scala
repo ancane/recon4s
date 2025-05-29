@@ -1,8 +1,8 @@
 package recon4s.naming
 
 final case class Convention(
-    from: Naming,
-    to: Vector[Naming],
+    to: Naming,
+    from: Vector[Naming],
     substitutes: Map[String, String] = Map.empty,
     descriminator: String = "type"
 ):
@@ -11,8 +11,8 @@ final case class Convention(
         substitutes.get(key) match
             case Some(variant) => Vector(variant)
             case None          => 
-              val parsed = from.parse(key)
-              (to.map(_.format(parsed)) :+ key).distinct
+              val parsed = to.parse(key)
+              (from.map(_.format(parsed)) :+ key).distinct
 
     final def substitute(classField: String, configKey: String): Convention =
         copy(substitutes = substitutes.updated(classField, configKey))
@@ -21,22 +21,22 @@ final case class Convention(
 
 object Convention:
 
-    val CamelToCebab = Convention(
-      from = CamelCase,
-      to = Vector(CebabCase)
+    val CamelFromDash = Convention(
+      to = CamelCase,
+      from = Vector(DashCase)
     )
 
-    val CamelToCebabCamel = Convention(
-      from = CamelCase,
-      to = Vector(CebabCase, CamelCase)
+    val CamelFromDashCamel = Convention(
+      to = CamelCase,
+      from = Vector(DashCase, CamelCase)
     )
 
-    val CamelToCebabCamelCaps = Convention(
-      from = CamelCase,
-      to = Vector(CebabCase, CamelCase, CamelCaps)
+    val CamelFromDashCamelCaps = Convention(
+      to = CamelCase,
+      from = Vector(DashCase, CamelCase, CamelCaps)
     )
 
-    val CamelToCebabCamelCapsSnake = Convention(
-      from = CamelCase,
-      to = Vector(CebabCase, CamelCase, CamelCaps, SnakeCase)
+    val CamelFromDashCamelCapsSnake = Convention(
+      to = CamelCase,
+      from = Vector(DashCase, CamelCase, CamelCaps, SnakeCase)
     )

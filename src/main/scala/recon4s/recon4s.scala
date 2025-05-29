@@ -15,7 +15,7 @@ export recon4s.naming.Convention.*
 export recon4s.reading.ScalaTypes.given
 export recon4s.reading.JavaTypes.given
 
-given Convention = CamelToCebabCamelCapsSnake
+given Convention = CamelFromDashCamelCapsSnake
 
 extension (config: Config)
 

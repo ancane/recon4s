@@ -4,7 +4,7 @@ trait Naming:
     def parse(key: String): List[String]
     def format(keys: List[String]): String
 
-object CebabCase extends Naming:
+object DashCase extends Naming:
     private val separator = "-"
 
     def parse(key: String): List[String]  = splitByType(key).filterNot(_ == separator)

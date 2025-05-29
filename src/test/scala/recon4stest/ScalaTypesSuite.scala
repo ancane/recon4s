@@ -165,8 +165,8 @@ class ScalaTypesSuite extends munit.FunSuite:
         val camelCaps = CamelCaps.format(actual)
         assertEquals(camelCaps, "ClassFieldName20Millis50Miles")
 
-        val cebab = CebabCase.format(actual)
-        assertEquals(cebab, "class-field-name-20-millis-50-miles")
+        val dash = DashCase.format(actual)
+        assertEquals(dash, "class-field-name-20-millis-50-miles")
 
         val snake = SnakeCase.format(actual)
         assertEquals(snake, "class_field_name_20_millis_50_miles")
@@ -187,7 +187,7 @@ class ScalaTypesSuite extends munit.FunSuite:
     }
 
     test("recon4s should read snake case keys") {
-        given Convention = recon4s.CamelToCebabCamelCapsSnake
+        given Convention = recon4s.CamelFromDashCamelCapsSnake
 
         enum Color(val rgb: Int):
             case Red   extends Color(0xff0000)
@@ -203,8 +203,8 @@ class ScalaTypesSuite extends munit.FunSuite:
         assertEquals(actual, CamelCase(Color.Blue))
     }
 
-    test("recon4s should read nested classes from cebab keys") {
-        given Convention = recon4s.CamelToCebabCamelCaps
+    test("recon4s should read nested classes from dash keys") {
+        given Convention = recon4s.CamelFromDashCamelCaps
 
         enum Color(val rgb: Int):
             case Red   extends Color(0xff0000)
@@ -221,7 +221,7 @@ class ScalaTypesSuite extends munit.FunSuite:
     }
 
     test("recon4s should allow substituting class field for config keys") {
-        given Convention = recon4s.CamelToCebab.substitute("one", "TWO")
+        given Convention = recon4s.CamelFromDash.substitute("one", "TWO")
 
         case class Conf(one: String)
         val actual = ConfigFactory
@@ -232,7 +232,7 @@ class ScalaTypesSuite extends munit.FunSuite:
     }
 
     test("recon4s should allow substituting class field for config keys with dots") {
-        given Convention = recon4s.CamelToCebab.substitute("one", "TWO.two")
+        given Convention = recon4s.CamelFromDash.substitute("one", "TWO.two")
 
         case class Conf(one: String)
         val actual = ConfigFactory
@@ -271,19 +271,19 @@ class ScalaTypesSuite extends munit.FunSuite:
 
     test("recon4s should provide naming convention mappings") {
         assertEquals(
-          CamelToCebab.variants("camelCase"),
+          CamelFromDash.variants("camelCase"),
           Vector("camel-case", "camelCase")
         )
         assertEquals(
-          CamelToCebabCamel.variants("camelCase"),
+          CamelFromDashCamel.variants("camelCase"),
           Vector("camel-case", "camelCase")
         )
         assertEquals(
-          CamelToCebabCamelCaps.variants("camelCase"),
+          CamelFromDashCamelCaps.variants("camelCase"),
           Vector("camel-case", "camelCase", "CamelCase")
         )
         assertEquals(
-          CamelToCebabCamelCapsSnake.variants("camelCase"),
+          CamelFromDashCamelCapsSnake.variants("camelCase"),
           Vector("camel-case", "camelCase", "CamelCase", "camel_case")
         )
     }
@@ -315,7 +315,7 @@ class ScalaTypesSuite extends munit.FunSuite:
     }
 
     test("recon4s should read custom descriminator") {
-        given Convention = CamelToCebabCamel.withDescriminaton("name")
+        given Convention = CamelFromDashCamel.withDescriminaton("name")
 
         sealed trait Shape
         case class CircleShape(radius: Int) extends Shape
@@ -375,8 +375,8 @@ class ScalaTypesSuite extends munit.FunSuite:
     test("recon4s should read enums with convention override") {
         import recon4s.naming.*
         given Convention = Convention(
-          from = CebabCase,
-          to = Vector(CamelCase, CamelCaps)
+          to = DashCase,
+          from = Vector(CamelCase, CamelCaps)
         )
         enum Color(val rgb: Int) derives Configurable:
             case Red   extends Color(0xff0000)
@@ -393,8 +393,8 @@ class ScalaTypesSuite extends munit.FunSuite:
     test("recon4s should read enums with naming override") {
         import recon4s.naming.*
         given Convention = Convention(
-          from = CebabCase,
-          to = Vector(CamelCase, CamelCaps)
+          to = DashCase,
+          from = Vector(CamelCase, CamelCaps)
         )
 
         enum Color(val rgb: Int) derives Configurable:
@@ -429,7 +429,7 @@ class ScalaTypesSuite extends munit.FunSuite:
         assertEquals(actual, Test(RectangleBlock(XY(1, 2))))
     }
 
-    test("recon4s should read cebab enum name") {
+    test("recon4s should read dash enum name") {
         enum Shape(val x: Int):
             case CircleShape       extends Shape(42)
             case Square(side: Int) extends Shape(side)
