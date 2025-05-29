@@ -1,8 +1,10 @@
-ThisBuild / organization         := "io.github.ancane"
+ThisBuild / organization         := "com.github.ancane"
 ThisBuild / organizationHomepage := Some(url("https://github.com/ancane/recon4s"))
-ThisBuild / version              := "0.4"
+ThisBuild / version              := "0.4.3"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
+
+credentials += Credentials(Path.userHome / ".sbt" / "sonatype_central_credentials")
 
 lazy val root = project
     .in(file("."))

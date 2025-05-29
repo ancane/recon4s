@@ -1,7 +1,8 @@
-publishTo              := sonatypePublishToBundle.value
-sonatypeProfileName    := "io.github.ancane"
-sonatypeCredentialHost := "s01.oss.sonatype.org"
-sonatypeRepository     := "https://s01.oss.sonatype.org/service/local"
+ThisBuild / publishTo := {
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
+}
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -9,6 +10,7 @@ ThisBuild / scmInfo := Some(
     "scm:git@github.com:ancane/recon4s.git"
   )
 )
+
 ThisBuild / developers := List(
   Developer(
     id = "ancane",
@@ -24,11 +26,4 @@ ThisBuild / licenses := List(
 )
 ThisBuild / homepage             := Some(url("https://github.com/ancane/recon4s"))
 ThisBuild / pomIncludeRepository := { _ => false }
-ThisBuild / publishTo := {
-    val nexus = "https://s01.oss.sonatype.org/"
-    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
 ThisBuild / publishMavenStyle := true
-
-//sonatypeLogLevel := "DEBUG"
