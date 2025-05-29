@@ -61,13 +61,14 @@ private[recon4s] trait ScalaTypes:
         def get(config: Config, key: String): FiniteDuration =
             Duration.fromNanos(config.getDuration(key, NANOSECONDS))
 
-    inline given reloadable[T](using c: Configurable[T]): Configurable[Reloadable[T]] =
-        new Configurable[Reloadable[T]]:
-            def get(config: Config, key: String): Reloadable[T] =
-                val instance = new Reloadable(c) {}
-                instance.get(config, key)
-                Reloadable.register(config, key, instance)
-                instance
+    inline given reloadable[T: Configurable]: Configurable[Reloadable[T]] = new ConfigurableReloadable[T]
+
+    class ConfigurableReloadable[T: Configurable as c] extends Configurable[Reloadable[T]]:
+        def get(config: Config, key: String): Reloadable[T] =
+            val instance = new Reloadable(c) {}
+            instance.get(config, key)
+            Reloadable.register(config, key, instance)
+            instance
 
     inline given optional[T](using c: Configurable[T]): Configurable[Option[T]] with
         override def getValue(config: Config, key: String)(using naming: Convention): Option[T] =
@@ -91,19 +92,21 @@ private[recon4s] trait ScalaTypes:
             builder.addAll(values)
             builder.result()
 
-    inline given maps[T](using c: Configurable[T]): Configurable[Map[String, T]] =
-        new Configurable[Map[String, T]]:
-            import scala.jdk.CollectionConverters.given
+    inline given maps[T: Configurable]: Configurable[Map[String, T]] = new ConfigurableMap[T]
 
-            def get(config: Config, key: String): Map[String, T] =
-                val cfg = config.getConfig(key)
-                cfg.underlying
-                    .root().entrySet().asScala
-                    .map { entry =>
-                        val key   = entry.getKey
-                        val value = c.get(cfg, key)
-                        key -> value
-                    }.toMap
+    class ConfigurableMap[T: Configurable as c] extends Configurable[Map[String, T]]:
+        import scala.jdk.CollectionConverters.given
+
+        def get(config: Config, key: String): Map[String, T] =
+            val cfg = config.getConfig(key)
+            cfg.underlying
+                .root().entrySet().asScala
+                .map { entry =>
+                    val key   = entry.getKey
+                    val value = c.get(cfg, key)
+                    key -> value
+                }.toMap
+
 end ScalaTypes
 
 object ScalaTypes extends ScalaTypes

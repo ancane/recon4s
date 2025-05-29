@@ -3,7 +3,7 @@ package recon4s.deriving
 import com.typesafe.config.{ConfigValue, ConfigException, ConfigValueType}
 import recon4s.naming.Convention
 import recon4s.reading.*
-import scala.compiletime.{constValue, erasedValue, error, summonInline, summonFrom}
+import scala.compiletime.{constValue, erasedValue, summonInline, summonFrom}
 import scala.deriving.*
 import scala.util.control.NoStackTrace
 import scala.util.Try
@@ -46,17 +46,27 @@ object Configurable extends ScalaTypes, JavaTypes:
         case given Mirror.Of[T]   => Configurable.derived[T]
         case _                    => summonInline[Configurable[T]]
 
-    private inline def deriveSum[T](using mirror: Mirror.SumOf[T], naming: Convention): Configurable[T] =
-        new Configurable[T]:
-            def get(config: Config, key: String): T =
-                config.getValue(key).valueType() match
-                    case ConfigValueType.OBJECT => readTypeFamily[T](config, key)
-                    case ConfigValueType.STRING => readEnum[T](config, key)
-                    case _ =>
-                        throw new ConfigException.WrongType(
-                          config.origin(),
-                          s"STRING or OBJECT with `${naming.descriminator}` field expected"
-                        )
+    class ConfigurableFn[T](f: (Config, String) => T) extends Configurable[T]:
+        def get(config: Config, key: String): T = f(config, key)
+
+    private inline def deriveSum[T](using mirror: Mirror.SumOf[T], naming: Convention): Configurable[T] = 
+        def getConfigurable(config: Config, key: String): T =
+            config.getValue(key).valueType() match
+                case ConfigValueType.OBJECT => readTypeFamily[T](config, key)
+                case ConfigValueType.STRING => readEnum[T](config, key)
+                case _ =>
+                    throw new ConfigException.WrongType(
+                        config.origin(),
+                        s"STRING or OBJECT with `${naming.descriminator}` field expected"
+                    )
+        new ConfigurableFn[T](getConfigurable)
+    end deriveSum
+
+    class VariantsPF(subtypeLabel: String) extends PartialFunction[(Set[String], Int), Int] {
+      override def apply(x: (Set[String], Int)): Int = x._2
+
+      override def isDefinedAt(x: (Set[String], Int)): Boolean = x._1.contains(subtypeLabel)
+    }
 
     private inline def readTypeFamily[T](
         config: Config,
@@ -70,7 +80,7 @@ object Configurable extends ScalaTypes, JavaTypes:
         val labels       = getLabels[mirror.MirroredElemLabels]
         labels
             .zipWithIndex.map { (l, i) => naming.variants(l).toSet -> i }
-            .collectFirst { case (variants, i) if variants.contains(subtypeLabel) => i }
+            .collectFirst(new VariantsPF(subtypeLabel))
             .flatMap {
                 case idx if idx >= 0 && idx < labels.size =>
                     summonOrdinal[mirror.MirroredElemTypes](idx, 0)
@@ -95,7 +105,7 @@ object Configurable extends ScalaTypes, JavaTypes:
         val labels    = summonLabels[mirror.MirroredElemLabels]
         labels
             .zipWithIndex.map { (l, i) => naming.variants(l).toSet -> i }
-            .collectFirst { case (variants, i) if variants.contains(enumLabel) => i }
+            .collectFirst(new VariantsPF(enumLabel))
             .flatMap {
                 case idx if idx >= 0 && idx < labels.size =>
                     summonCase[mirror.MirroredElemTypes, T](idx, 0)
@@ -129,25 +139,33 @@ object Configurable extends ScalaTypes, JavaTypes:
             case _: (head *: tail) => constValue[head & String] +: summonLabels[tail]
             case _: EmptyTuple     => Vector.empty
 
-    private inline def deriveProduct[T](defaults: Tuple)(using
-        mirror: Mirror.ProductOf[T],
-        naming: Convention
-    ): Configurable[T] =
-        new Configurable[T]:
-            def get(config: Config, key: String): T =
-                val tuple = inline erasedValue[T] match
-                    case _: Tuple =>
-                        val values = config.getList(key).zipWithIndex
-                        readTupleFromList[mirror.MirroredElemTypes](config, key, values)
-                    case _ =>
-                        val labels = getLabels[mirror.MirroredElemLabels]
-                        readTuple[mirror.MirroredElemTypes](config.getConfig(key), labels, defaults)
-                mirror.fromProduct(tuple)
+    private inline def deriveProduct[T](defaults: Tuple)(using mirror: Mirror.ProductOf[T], naming: Convention): Configurable[T] =
+        def getConfigurable(config: Config, key: String): T =
+            val tuple = inline erasedValue[T] match
+                case _: Tuple =>
+                    val values = config.getList(key).zipWithIndex
+                    readTupleFromList[mirror.MirroredElemTypes](config, key, values)
+                case _ =>
+                    val labels = getLabels[mirror.MirroredElemLabels]
+                    readTuple[mirror.MirroredElemTypes](config.getConfig(key), labels, defaults)
+            mirror.fromProduct(tuple)
+
+        new ConfigurableFn(getConfigurable)
+    end deriveProduct
 
     private inline def getLabels[Labels <: Tuple]: List[String] =
         inline erasedValue[Labels] match
             case _: (head *: tail) => constValue[head & String] :: getLabels[tail]
             case _: EmptyTuple     => Nil
+
+    class RecoverPF(default: Any) extends PartialFunction[Throwable, Any] {
+      override def apply(e: Throwable): Any =
+        default match
+            case Some(value) => value
+            case None => throw e
+
+      override def isDefinedAt(x: Throwable): Boolean = x.isInstanceOf[ConfigException]
+    }
 
     private inline def readTuple[Types <: Tuple](
         config: Config,
@@ -158,13 +176,9 @@ object Configurable extends ScalaTypes, JavaTypes:
             case _: (head *: tail) =>
                 defaults match
                     case default *: defaultsTail =>
-                        Try {
-                            summonConfigurable[head].getValue(config, labels.head)
-                        }.recover {
-                            case e: ConfigException => default match
-                                    case Some(value) => value
-                                    case None        => throw e
-                        }.get *: readTuple[tail](config, labels.tail, defaultsTail)
+                        Try(summonConfigurable[head].getValue(config, labels.head))
+                        .recover(new RecoverPF(default))
+                        .get *: readTuple[tail](config, labels.tail, defaultsTail)
                     case _ => EmptyTuple
             case _: EmptyTuple => EmptyTuple
 

@@ -35,8 +35,8 @@ object Reloadable:
 
     private def reload(
         refreshConfig: => TypesafeConfig,
-        onSuccess: String => Unit = (_: String) => (),
-        onFailure: Throwable => Unit = _ => ()
+        onSuccess: String => Unit,
+        onFailure: Throwable => Unit
     )(using Convention): Unit =
         Try {
             ConfigFactory.invalidateCaches()

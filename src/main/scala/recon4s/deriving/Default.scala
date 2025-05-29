@@ -11,11 +11,14 @@ private[recon4s] sealed trait Default[T]:
 object Default:
     def apply[T](using d: Default[T]) = d
 
-    transparent inline given [T](using m: Mirror.ProductOf[T]): Default[T] = new Default[T]:
-        type Out = Tuple.Map[m.MirroredElemTypes, Option]
-        def values =
-            val tupleSize: Int = constValue[Tuple.Size[m.MirroredElemTypes]]
-            getDefaults[T](tupleSize).asInstanceOf[Out]
+    class DefaultProduct[T, K <: Tuple](defaults: Tuple.Map[K, Option]) extends Default[T]:
+        type Out = Tuple.Map[K, Option]
+        def values = defaults
+
+    transparent inline given [T](using m: Mirror.ProductOf[T]): Default[T] =
+        val tupleSize: Int = constValue[Tuple.Size[m.MirroredElemTypes]]
+        val defaultValues = getDefaults[T](tupleSize).asInstanceOf[Tuple.Map[m.MirroredElemTypes, Option]]
+        new DefaultProduct(defaultValues)
 
     inline def getDefaults[T](inline s: Int): Tuple = ${ getDefaultsImpl[T]('s) }
 

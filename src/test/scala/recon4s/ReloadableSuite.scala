@@ -14,8 +14,8 @@ class ReloadableSuite extends munit.FunSuite:
     case class TestBoolean(active: Reloadable[Boolean])
 
     private val file = new Fixture[Path]("files"):
-        var temp: Path = null
-        def apply()    = temp
+        private var temp: Path = null
+        def apply() = temp
 
         override def beforeEach(context: BeforeEach): Unit =
             temp = Files.createTempFile("recon4s", ".conf")
@@ -59,7 +59,7 @@ class ReloadableSuite extends munit.FunSuite:
 
         write(path, "app.name { fieldValue = 46 }")
 
-        result.future.foreach { path =>
+        result.future.foreach { _ =>
             assertEquals(actual.fieldValue.get(), 46)
         }
     }
@@ -78,7 +78,7 @@ class ReloadableSuite extends munit.FunSuite:
         assertEquals(actual.fieldValue.get(), 42)
         write(path, "{ fieldValue = 46 }")
 
-        result.future.foreach { path =>
+        result.future.foreach { _ =>
             assertEquals(actual.fieldValue.get(), 46)
         }
     }
@@ -98,7 +98,7 @@ class ReloadableSuite extends munit.FunSuite:
 
         write(path, "{ field-value = 46 }")
 
-        result.future.foreach { path =>
+        result.future.foreach { _ =>
             assertEquals(actual.fieldValue.get(), 46)
         }
     }
@@ -118,7 +118,7 @@ class ReloadableSuite extends munit.FunSuite:
 
         write(path, "{ fieldValue = 46 }")
 
-        result.future.foreach { path =>
+        result.future.foreach { _ =>
             assertEquals(actual.fieldValue.get(), 46)
         }
     }
@@ -138,7 +138,7 @@ class ReloadableSuite extends munit.FunSuite:
 
         write(path, "{ fieldValue = 46 }")
 
-        result.future.foreach { path =>
+        result.future.foreach { _ =>
             assertEquals(actual.get(), 46)
         }
     }

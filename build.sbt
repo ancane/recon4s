@@ -1,6 +1,6 @@
 ThisBuild / organization         := "com.github.ancane"
 ThisBuild / organizationHomepage := Some(url("https://github.com/ancane/recon4s"))
-ThisBuild / version              := "0.4.3"
+ThisBuild / version              := "0.5.0"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -10,7 +10,7 @@ lazy val root = project
     .in(file("."))
     .settings(
       name         := "recon4s",
-      scalaVersion := "3.4.1",
+      scalaVersion := "3.7.0",
       scalacOptions ++= Seq(
         "-encoding",
         "utf8",
@@ -21,7 +21,7 @@ lazy val root = project
         "-language:experimental.macros",
         "-language:higherKinds",
         "-language:implicitConversions",
-        "-Ykind-projector",
+        "-Xkind-projector",
         "-Wvalue-discard",
         "-Wunused:implicits",
         "-Wunused:explicits",
